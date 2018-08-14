@@ -1,6 +1,14 @@
 // Adapted from https://phaser.io/tutorials/making-your-first-phaser-3-game
 
 class MainScene extends Phaser.Scene {
+    constructor() {
+        super();
+        this.platformLocations = [
+            [[600, 400], [50, 250], [750, 220]],
+            [[600, 200], [50, 150], [750, 500], [75, 400]],
+        ];
+    }
+
     preload() {
         this.score = 0;
         'platform star bomb'.split(' ').
@@ -12,10 +20,10 @@ class MainScene extends Phaser.Scene {
     create() {
         this.level = 0;
         this.add.image(400, 300, 'sky');
-        this.createPlatforms();
+        this.platforms = this.physics.add.staticGroup();
         const player = this.createPlayer();
         const stars = this.stars = this.physics.add.group({
-            key: 'star', repeat: 9, setXY: {x: 12, y: 0, stepX: 70}});
+            key: 'star', repeat: 0, setXY: {x: 12, y: 0, stepX: 70}});
         const bombs = this.bombs = this.physics.add.group();
         this.scoreText = this.add.text(16, 16, '', {fontSize: '32px', fill: '#000'});
         [player, stars, bombs].forEach(obj => this.physics.add.collider(obj, this.platforms));
@@ -41,9 +49,11 @@ class MainScene extends Phaser.Scene {
     }
 
     createPlatforms() {
-        this.platforms = this.physics.add.staticGroup();
+        this.platforms.getChildren().forEach((platform) => platform.destroy());
         this.platforms.create(400, 615, 'platform').setScale(2).refreshBody().setAlpha(0); // The ground
-        [[600, 400], [50, 250], [750, 220]].forEach(xy => this.platforms.create(xy[0], xy[1], 'platform'));
+        console.log(`creating platforms for level ${this.level}`);
+        this.platformLocations[this.level % this.platformLocations.length].forEach(xy =>
+            this.platforms.create(xy[0], xy[1], 'platform'));
     }
 
     movePlayer() {
@@ -91,6 +101,7 @@ class MainScene extends Phaser.Scene {
         });
         this.createBomb();
         this.updateHud();
+        this.createPlatforms();
     }
 
     collectStar(player, star) {
